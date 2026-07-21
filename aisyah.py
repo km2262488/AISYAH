@@ -727,7 +727,7 @@ def main():
         # Show AISYAH Banner
         console.print(AISYAH_BANNER, style="magenta")
         console.print()
-        console.print(Align.center("[dim]Load Tester with Live Dashboard - Separate Boxes[/]"))
+        console.print(Align.center("[dim]Load Tester with Live Dashboard by Aisyah[/]"))
         console.print()
         
         # Get user input
