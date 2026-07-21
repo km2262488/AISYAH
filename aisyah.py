@@ -48,8 +48,9 @@ AISYAH_BANNER = """
 ██╔══██║██║╚════██║  ╚██╔╝  ██╔══██║██╔══██║
 ██║  ██║██║███████║   ██║   ██║  ██║██║  ██║
 ╚═╝  ╚═╝╚═╝╚══════╝   ╚═╝   ╚═╝  ╚═╝╚═╝  ╚═╝                  
+    
     Website Load Tester with  💜💜💖💖              
-  ═════════════════════════════════════════════════
+═════════════════════════════════════════════════
 """
 
 # ============================================================================
@@ -115,7 +116,7 @@ class AisyahStats:
 # ============================================================================
 
 class AisyahDashboard:
-    """Live dashboard for monitoring load tests - Portrait Mode"""
+    """Live dashboard for monitoring load tests """
     
     def __init__(self):
         self.stats = AisyahStats()
@@ -612,7 +613,7 @@ class AisyahLoadTester:
             console.print("[bold magenta]🌸 AISYAH:[/] [bold red]❌ Website may be experiencing issues.[/]")
         
         console.print()
-        console.print("[dim]🌸 AISYAH - Thank you for using![/]")
+        console.print("[dim]🌸 AISYAH - Thank you Allah[/]")
         
         return report
 
@@ -627,7 +628,7 @@ def main():
     # Show AISYAH Banner
     console.print(AISYAH_BANNER, style="magenta")
     console.print()
-    console.print(Align.center("[dim]Website Load Tester with Live Dashboard - Portrait Mode[/]"))
+    console.print(Align.center("[dim]Aisyah Load Tester with Live Dashboard [/]"))
     console.print()
     
     # Get user input with AISYAH styling
