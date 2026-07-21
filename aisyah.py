@@ -132,7 +132,7 @@ class AisyahStats:
 # ============================================================================
 
 class AisyahDashboard:
-    """Live dashboard with separate boxes"""
+    """Aisyah Live dashboard """
     
     def __init__(self):
         self.stats = AisyahStats()
