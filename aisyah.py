@@ -1,10 +1,9 @@
 #!/usr/bin/env python3
 """
 AISYAH - Website Load Tester with Live Dashboard
-Real-time monitoring with rich terminal UI - Portrait Mode
+Real-time monitoring with rich terminal UI - Separate Boxes
 """
 
-import asyncio
 import time
 import statistics
 import threading
@@ -21,11 +20,9 @@ from rich.panel import Panel
 from rich.table import Table
 from rich.layout import Layout
 from rich.live import Live
-from rich.progress import Progress, BarColumn, TextColumn, TimeElapsedColumn
 from rich.align import Align
 from rich import box
 from rich.text import Text
-from rich.color import Color
 
 # Try to import optional plotting library
 try:
@@ -37,23 +34,20 @@ except ImportError:
 console = Console()
 
 # ============================================================================
-# AISYAH Banner
+# AISYAH Banner - Compact
 # ============================================================================
 
 AISYAH_BANNER = """
-╔══════════════════════════════════════════════════════════════════╗
-║                                                                  ║
-║    █████  ██╗███████╗██╗   ██╗ █████╗ ██╗  ██╗                  ║
-║   ██╔══██╗██║██╔════╝╚██╗ ██╔╝██╔══██╗██║  ██║                  ║
-║   ███████║██║███████╗ ╚████╔╝ ███████║███████║                  ║
-║   ██╔══██║██║╚════██║  ╚██╔╝  ██╔══██║██╔══██║                  ║
-║   ██║  ██║██║███████║   ██║   ██║  ██║██║  ██║                  ║
-║   ╚═╝  ╚═╝╚═╝╚══════╝   ╚═╝   ╚═╝  ╚═╝╚═╝  ╚═╝                  ║
-║                                                                  ║
-║     Website Load Tester with Live Dashboard                     ║
-║     Version 1.0.1 - Fixed                                       ║
-║                                                                  ║
-╚══════════════════════════════════════════════════════════════════╝
+╔═══════════════════════════════════════════╗
+║  █████  ██╗███████╗██╗   ██╗ █████╗ ██╗  ║
+║ ██╔══██╗██║██╔════╝╚██╗ ██╔╝██╔══██╗██║  ║
+║ ███████║██║███████╗ ╚████╔╝ ███████║████║  ║
+║ ██╔══██║██║╚════██║  ╚██╔╝  ██╔══██║██║  ║
+║ ██║  ██║██║███████║   ██║   ██║  ██║██║  ║
+║ ╚═╝  ╚═╝╚═╝╚══════╝   ╚═╝   ╚═╝  ╚═╝╚═╝  ║
+║                                           ║
+║   Website Load Tester v1.0.3              ║
+╚═══════════════════════════════════════════╝
 """
 
 # ============================================================================
@@ -136,17 +130,18 @@ class AisyahStats:
             return None
 
 # ============================================================================
-# AISYAH Live Dashboard - Portrait Mode
+# AISYAH Live Dashboard - Separate Boxes
 # ============================================================================
 
 class AisyahDashboard:
-    """Live dashboard for monitoring load tests - Portrait Mode"""
+    """Live dashboard with separate boxes"""
     
     def __init__(self):
         self.stats = AisyahStats()
         self.running = False
         self.live = None
-        self._history = deque(maxlen=60)  # 60 seconds of history
+        self._history = deque(maxlen=60)
+        self._bar_data = []
         
         # Color schemes
         self.colors = {
@@ -170,6 +165,9 @@ class AisyahDashboard:
                     'response_time': result.response_time,
                     'status': 'success'
                 })
+                self._bar_data.append(result.response_time)
+                if len(self._bar_data) > 30:
+                    self._bar_data.pop(0)
         else:
             self.stats.failed += 1
             if result.error:
@@ -182,6 +180,9 @@ class AisyahDashboard:
                     'response_time': 0,
                     'status': 'error'
                 })
+                self._bar_data.append(0)
+                if len(self._bar_data) > 30:
+                    self._bar_data.pop(0)
         
         if result.status_code:
             self.stats.status_codes[result.status_code] += 1
@@ -199,163 +200,196 @@ class AisyahDashboard:
             return self.colors['failed']
     
     def create_summary_panel(self) -> Panel:
-        """Create summary statistics panel"""
+        """Create summary statistics panel - Separate"""
         try:
-            table = Table.grid(padding=(0, 2))
-            table.add_column(justify="right", style="bold")
-            table.add_column()
+            table = Table.grid(padding=(0, 1))
+            table.add_column(justify="right", style="bold", width=10)
+            table.add_column(width=20)
             
             status_color = self.get_status_color()
             elapsed = self.stats.elapsed_time
             
-            table.add_row("Status", f"[{status_color}]● {'RUNNING' if self.running else 'STOPPED'}[/]")
-            table.add_row("Duration", f"{self._format_time(elapsed)}")
+            table.add_row("Status", f"[{status_color}]● {'RUNNING' if self.running else 'STOP'}[/]")
+            table.add_row("Duration", self._format_time(elapsed))
             table.add_row("Requests", f"{self.stats.total_requests:,}")
-            table.add_row("✅ Successful", f"[green]{self.stats.successful:,}[/]")
-            table.add_row("❌ Failed", f"[red]{self.stats.failed:,}[/]")
-            table.add_row("Success Rate", f"[{status_color}]{self.stats.success_rate:.1f}%[/]")
+            table.add_row("✅ OK", f"[green]{self.stats.successful:,}[/]")
+            table.add_row("❌ Fail", f"[red]{self.stats.failed:,}[/]")
+            table.add_row("Rate", f"[{status_color}]{self.stats.success_rate:.1f}%[/]")
             table.add_row("RPS", f"{self.stats.requests_per_second:.1f}")
             
             return Panel(
                 table,
-                title="[bold white]📊 SUMMARY[/]",
+                title="📊 SUMMARY",
                 border_style=status_color,
                 box=box.ROUNDED
             )
         except Exception as e:
-            return Panel(f"Error: {e}", title="SUMMARY", border_style="red")
+            return Panel(f"Error", title="SUMMARY", border_style="red")
     
     def create_stats_panel(self) -> Panel:
-        """Create statistics panel with safe error handling"""
+        """Create statistics panel - Separate"""
         try:
-            table = Table.grid(padding=(0, 2))
-            table.add_column(justify="right", style="bold")
-            table.add_column()
+            table = Table.grid(padding=(0, 1))
+            table.add_column(justify="right", style="bold", width=10)
+            table.add_column(width=20)
             
             # Response time stats
-            table.add_row("Avg Response", self._format_ms_safe(self.stats.avg_response_time))
-            table.add_row("Median Response", self._format_ms_safe(self.stats.median_response_time))
-            table.add_row("Min Response", self._format_ms_safe(self.stats.min_response_time, color="green"))
-            table.add_row("Max Response", self._format_ms_safe(self.stats.max_response_time, color="red"))
+            table.add_row("Avg", self._format_ms_safe(self.stats.avg_response_time))
+            table.add_row("Med", self._format_ms_safe(self.stats.median_response_time))
+            table.add_row("Min", self._format_ms_safe(self.stats.min_response_time, color="green"))
+            table.add_row("Max", self._format_ms_safe(self.stats.max_response_time, color="red"))
             
             # Percentiles
             p95 = self.stats.get_percentile(95)
             p99 = self.stats.get_percentile(99)
             
             if p95 is not None:
-                table.add_row("95th Percentile", f"{p95:.1f} ms")
+                table.add_row("P95", f"{p95:.0f}ms")
             if p99 is not None:
-                table.add_row("99th Percentile", f"[yellow]{p99:.1f} ms[/]")
+                table.add_row("P99", f"[yellow]{p99:.0f}ms[/]")
             
             return Panel(
                 table,
-                title="[bold yellow]⚡ PERFORMANCE[/]",
+                title="⚡ PERFORMANCE",
                 border_style="yellow",
                 box=box.ROUNDED
             )
         except Exception as e:
-            return Panel(f"Error: {e}", title="PERFORMANCE", border_style="red")
+            return Panel(f"Error", title="PERFORMANCE", border_style="red")
     
     def create_status_codes_panel(self) -> Panel:
-        """Create status codes distribution panel"""
+        """Create status codes distribution panel - Separate"""
         try:
             if not self.stats.status_codes:
-                return Panel("No data yet", title="📋 Status Codes", border_style="blue")
+                return Panel("No data yet", title="📋 STATUS CODES", border_style="blue")
             
-            # Create table with better formatting for portrait
-            table = Table.grid(padding=(0, 2))
-            table.add_column(justify="right", style="bold")
-            table.add_column()
+            table = Table.grid(padding=(0, 1))
+            table.add_column(justify="right", style="bold", width=8)
+            table.add_column(width=22)
             
             # Sort by count descending
             sorted_codes = sorted(self.stats.status_codes.items(), key=lambda x: x[1], reverse=True)
             
-            for code, count in sorted_codes[:8]:  # Show top 8 status codes
+            for code, count in sorted_codes[:5]:  # Show top 5 status codes
                 color = "green" if code == 200 else "yellow" if code < 400 else "red"
                 pct = (count / self.stats.total_requests) * 100 if self.stats.total_requests > 0 else 0
                 table.add_row(f"HTTP {code}", f"[{color}]{count:,} ({pct:.1f}%)[/]")
             
-            # If there are more, show "others" summary
-            if len(sorted_codes) > 8:
-                other_count = sum(count for _, count in sorted_codes[8:])
-                other_pct = (other_count / self.stats.total_requests) * 100 if self.stats.total_requests > 0 else 0
-                table.add_row("Others", f"{other_count:,} ({other_pct:.1f}%)")
-            
             return Panel(
                 table,
-                title="📋 Status Codes",
+                title="📋 STATUS CODES",
                 border_style="blue",
                 box=box.ROUNDED
             )
         except Exception as e:
-            return Panel(f"Error: {e}", title="Status Codes", border_style="red")
+            return Panel(f"Error", title="STATUS CODES", border_style="red")
     
     def create_errors_panel(self) -> Panel:
-        """Create errors summary panel"""
+        """Create errors summary panel - Separate"""
         try:
             if not self.stats.errors:
-                return Panel("✅ No errors", title="Errors", border_style="green")
+                return Panel("✅ No errors detected", title="⚠ ERRORS", border_style="green")
             
-            # Show last 5 errors
-            error_table = Table.grid(padding=(0, 2))
-            error_table.add_column(justify="right", style="bold")
-            error_table.add_column()
+            error_table = Table.grid(padding=(0, 1))
+            error_table.add_column(justify="right", style="bold", width=8)
+            error_table.add_column(width=22)
             
             error_counts = Counter(e['error'] for e in self.stats.errors[-10:])
-            for error, count in error_counts.most_common(3):
-                error_table.add_row(f"⚠ Error #{count}", f"[red]{error[:40]}...[/]")
+            for error, count in error_counts.most_common(2):
+                error_table.add_row(f"#{count}", f"[red]{error[:30]}...[/]")
             
             total_errors = len(self.stats.errors)
-            if total_errors > 3:
-                error_table.add_row("Total Errors", f"[red]{total_errors}[/]")
+            if total_errors > 2:
+                error_table.add_row("Total", f"[red]{total_errors}[/]")
             
             return Panel(
                 error_table,
-                title=f"[red]⚠ ERRORS ({len(self.stats.errors)})[/]",
+                title=f"⚠ ERRORS ({len(self.stats.errors)})",
                 border_style="red",
                 box=box.ROUNDED
             )
         except Exception as e:
-            return Panel(f"Error: {e}", title="Errors", border_style="red")
+            return Panel(f"Error", title="ERRORS", border_style="red")
     
-    def create_history_chart(self) -> Panel:
-        """Create response time history chart using plotext"""
+    def create_bar_chart_plotext(self) -> Panel:
+        """Create bar chart using plotext"""
         try:
-            if not HAS_PLOTEXT or len(self._history) < 2:
+            if not HAS_PLOTEXT or len(self._bar_data) < 2:
                 return Panel(
-                    "📈 Response time history\n(install plotext for charts)",
-                    title="History",
+                    "📊 Install plotext for charts",
+                    title="📊 BAR CHART",
                     border_style="cyan"
                 )
             
-            # Prepare data for plotting
-            response_times = [h['response_time'] for h in self._history if h['status'] == 'success']
-            
-            if len(response_times) < 2:
-                return Panel("Insufficient data for chart", title="History", border_style="cyan")
+            data = self._bar_data[-30:]
+            if len(data) < 2:
+                return Panel("Insufficient data", title="📊 BAR CHART", border_style="cyan")
             
             plt.clf()
-            plt.plot(response_times, color='cyan')
-            plt.title(f"Response Time History - Last {len(response_times)} requests")
+            plt.bar(range(len(data)), data, color='cyan', width=0.8)
+            plt.title(f"Last {len(data)} requests")
             plt.xlabel("Request")
             plt.ylabel("Time (ms)")
             plt.theme("dark")
             
-            # Get plot as string
+            # Add average line
+            if self.stats.avg_response_time:
+                plt.axhline(y=self.stats.avg_response_time, color='yellow', linestyle='--', label='Avg')
+            
             plot_str = plt.build()
             
             return Panel(
                 plot_str,
-                title="📈 Response Time History",
+                title="📊 BAR CHART",
                 border_style="cyan",
                 box=box.ROUNDED
             )
         except Exception as e:
-            return Panel(f"Error: {e}", title="History", border_style="red")
+            return self.create_ascii_bar_chart()
+    
+    def create_ascii_bar_chart(self) -> Panel:
+        """Create simple ASCII bar chart without plotext"""
+        try:
+            if not self._bar_data or len(self._bar_data) < 2:
+                return Panel(
+                    "📊 Waiting for data...",
+                    title="📊 BAR CHART",
+                    border_style="cyan"
+                )
+            
+            data = list(self._bar_data)[-20:]
+            max_val = max(data) if data else 1
+            
+            bars = []
+            for i, val in enumerate(data):
+                if val > 0:
+                    width = int((val / max_val) * 25)
+                    color = "green" if val < 200 else "yellow" if val < 500 else "red"
+                    bar = "█" * width
+                    bars.append(f"{i+1:2d} │ [{color}]{bar:<25}[/] {val:.0f}ms")
+                else:
+                    bars.append(f"{i+1:2d} │ [red]✗[/]")
+            
+            bar_text = "\n".join(bars[-15:])
+            
+            # Add average line if available
+            avg_text = ""
+            if self.stats.avg_response_time:
+                avg_text = f"\n── Avg: {self.stats.avg_response_time:.0f}ms ──"
+            
+            return Panel(
+                f"{bar_text}{avg_text}",
+                title="📊 BAR CHART",
+                border_style="cyan",
+                box=box.ROUNDED
+            )
+        except Exception as e:
+            return Panel(f"Error: {e}", title="BAR CHART", border_style="red")
     
     def create_dashboard(self) -> Layout:
-        """Create the full dashboard layout - Portrait Mode"""
+        """Create the full dashboard layout - Separate Boxes"""
         try:
+            # Create main layout with padding for separation
             layout = Layout()
             layout.split(
                 Layout(name="header", size=3),
@@ -370,46 +404,45 @@ class AisyahDashboard:
             header_text.append(f"  {datetime.now().strftime('%H:%M:%S')}", style="dim")
             layout["header"].update(Panel(Align.center(header_text), border_style="magenta"))
             
-            # Body - Vertical layout (portrait mode)
+            # Body - Vertical layout with each panel as separate box
             body = Layout()
             body.split(
-                Layout(name="summary", size=10),
-                Layout(name="stats", size=9),
+                Layout(name="summary", size=9),
+                Layout(name="stats", size=8),
                 Layout(name="status", size=7),
-                Layout(name="history", size=8),
+                Layout(name="history", size=10),
                 Layout(name="errors", size=6)
             )
             
+            # Each panel is a separate box with spacing
             body["summary"].update(self.create_summary_panel())
             body["stats"].update(self.create_stats_panel())
             body["status"].update(self.create_status_codes_panel())
-            body["history"].update(self.create_history_chart())
+            body["history"].update(self.create_ascii_bar_chart())
             body["errors"].update(self.create_errors_panel())
             
             layout["body"].update(body)
             
             # Footer
             footer_text = Text()
-            footer_text.append("🌸 AISYAH ", style="magenta")
-            footer_text.append("• ", style="dim")
-            footer_text.append("Press ", style="dim")
+            footer_text.append("🌸 AISYAH", style="magenta")
+            footer_text.append(" • ", style="dim")
             footer_text.append("Ctrl+C", style="bold white")
             footer_text.append(" to stop", style="dim")
             layout["footer"].update(Align.center(footer_text))
             
             return layout
         except Exception as e:
-            # Fallback layout
             layout = Layout()
             layout.split(Layout(name="error"))
-            layout["error"].update(Panel(f"Dashboard Error: {e}", title="Error", border_style="red"))
+            layout["error"].update(Panel(f"Error: {e}", title="Error", border_style="red"))
             return layout
     
     def _format_time(self, seconds: float) -> str:
         """Format time duration"""
         try:
             if seconds < 60:
-                return f"{seconds:.1f}s"
+                return f"{seconds:.0f}s"
             elif seconds < 3600:
                 return f"{seconds/60:.1f}m"
             else:
@@ -418,16 +451,14 @@ class AisyahDashboard:
             return "0s"
     
     def _format_ms_safe(self, value: Optional[float], color: str = None) -> str:
-        """Format milliseconds with safe handling"""
+        """Format milliseconds"""
         try:
             if value is None:
                 return "N/A"
-            if value < 1:
-                result = f"{value:.2f} ms"
-            elif value < 1000:
-                result = f"{value:.1f} ms"
+            if value < 1000:
+                result = f"{value:.0f}ms"
             else:
-                result = f"{value/1000:.2f} s"
+                result = f"{value/1000:.1f}s"
             
             if color:
                 return f"[{color}]{result}[/]"
@@ -446,10 +477,10 @@ class AisyahDashboard:
                             self.live.update(self.create_dashboard())
                         time.sleep(0.5)
                     except Exception as e:
-                        console.print(f"[red]Dashboard update error: {e}[/]")
+                        console.print(f"[red]Update error: {e}[/]")
                         time.sleep(1)
         except Exception as e:
-            console.print(f"[red]Dashboard display error: {e}[/]")
+            console.print(f"[red]Display error: {e}[/]")
 
 # ============================================================================
 # AISYAH Website Load Tester
@@ -540,17 +571,17 @@ class AisyahLoadTester:
             console.print(AISYAH_BANNER, style="magenta")
             console.print()
             
-            # Show test info
-            info_table = Table.grid(padding=(0, 2))
-            info_table.add_column(justify="right", style="bold magenta")
-            info_table.add_column()
-            info_table.add_row("🌐 URL", self.url)
-            info_table.add_row("📊 Total Requests", f"{self.num_requests:,}")
-            info_table.add_row("⚡ Threads", str(self.num_threads))
-            info_table.add_row("📅 Start Time", datetime.now().strftime('%Y-%m-%d %H:%M:%S'))
+            # Show test info - Compact
+            info_table = Table.grid(padding=(0, 1))
+            info_table.add_column(justify="right", style="bold magenta", width=12)
+            info_table.add_column(width=25)
+            info_table.add_row("🌐 URL", self.url[:40])
+            info_table.add_row("📊 Req", f"{self.num_requests:,}")
+            info_table.add_row("⚡ Thr", str(self.num_threads))
+            info_table.add_row("📅 Start", datetime.now().strftime('%H:%M:%S'))
             
-            console.print(Panel(info_table, title="[bold magenta]🌸 AISYAH CONFIGURATION[/]", 
-                               border_style="magenta", box=box.DOUBLE))
+            console.print(Panel(info_table, title="🌸 AISYAH CONFIG", 
+                               border_style="magenta", box=box.ROUNDED))
             console.print()
             
             self.running = True
@@ -607,7 +638,7 @@ class AisyahLoadTester:
             return {}
     
     def generate_report(self, total_time: float) -> Dict[str, Any]:
-        """Generate final report with safe handling"""
+        """Generate final report"""
         try:
             stats = self.dashboard.stats
             
@@ -626,77 +657,64 @@ class AisyahLoadTester:
             # Display final summary
             console.clear()
             console.print(Panel.fit(
-                "[bold magenta]🌸 AISYAH - LOAD TEST COMPLETED ✅[/]",
+                "[bold magenta]🌸 AISYAH - COMPLETED ✅[/]",
                 border_style="magenta"
             ))
             console.print()
             
             # Summary Table
-            summary_table = Table(box=box.DOUBLE, border_style="magenta")
-            summary_table.add_column("Metric", style="bold magenta")
-            summary_table.add_column("Value", justify="center")
+            summary_table = Table(box=box.ROUNDED, border_style="magenta")
+            summary_table.add_column("Metric", style="bold magenta", width=12)
+            summary_table.add_column("Value", justify="center", width=15)
             
-            summary_table.add_row("Total Requests", f"{report['total_requests']:,}")
-            summary_table.add_row("✅ Successful", f"[green]{report['successful']:,}[/]")
-            summary_table.add_row("❌ Failed", f"[red]{report['failed']:,}[/]")
-            summary_table.add_row("Success Rate", f"{report['success_rate']:.1f}%")
-            summary_table.add_row("Duration", f"{total_time:.2f}s")
-            summary_table.add_row("Requests/sec", f"{report['rps']:.2f}")
+            summary_table.add_row("Requests", f"{report['total_requests']:,}")
+            summary_table.add_row("✅ OK", f"[green]{report['successful']:,}[/]")
+            summary_table.add_row("❌ Fail", f"[red]{report['failed']:,}[/]")
+            summary_table.add_row("Rate", f"{report['success_rate']:.1f}%")
+            summary_table.add_row("Duration", f"{total_time:.1f}s")
+            summary_table.add_row("RPS", f"{report['rps']:.1f}")
             
             if stats.avg_response_time is not None:
-                summary_table.add_row("Avg Response Time", f"{stats.avg_response_time:.1f} ms")
+                summary_table.add_row("Avg", f"{stats.avg_response_time:.0f}ms")
             if stats.max_response_time is not None:
-                summary_table.add_row("Max Response Time", f"[red]{stats.max_response_time:.1f} ms[/]")
+                summary_table.add_row("Max", f"[red]{stats.max_response_time:.0f}ms[/]")
             if stats.min_response_time is not None:
-                summary_table.add_row("Min Response Time", f"[green]{stats.min_response_time:.1f} ms[/]")
+                summary_table.add_row("Min", f"[green]{stats.min_response_time:.0f}ms[/]")
             
             console.print(summary_table)
             console.print()
             
             # Status codes
             if report['status_codes']:
-                status_table = Table(title="Status Codes Distribution", box=box.SQUARE, border_style="blue")
-                status_table.add_column("HTTP Status", justify="center", style="bold")
-                status_table.add_column("Count", justify="center")
-                status_table.add_column("Percentage", justify="center")
+                status_table = Table(box=box.SQUARE, border_style="blue")
+                status_table.add_column("Status", justify="center", style="bold", width=8)
+                status_table.add_column("Count", justify="center", width=10)
+                status_table.add_column("%", justify="center", width=6)
                 
                 for code, count in sorted(report['status_codes'].items()):
                     pct = (count / report['total_requests']) * 100 if report['total_requests'] > 0 else 0
                     color = "green" if code == 200 else "yellow" if code < 400 else "red"
-                    status_table.add_row(str(code), f"[{color}]{count:,}[/]", f"{pct:.1f}%")
+                    status_table.add_row(str(code), f"[{color}]{count:,}[/]", f"{pct:.0f}%")
                 
                 console.print(status_table)
                 console.print()
             
-            # Errors
-            if report['errors']:
-                error_counts = Counter(e['error'] for e in report['errors'][-20:])
-                error_table = Table(title="Recent Errors", box=box.SQUARE, border_style="red")
-                error_table.add_column("Error Type", style="bold")
-                error_table.add_column("Count", justify="center")
-                
-                for error, count in error_counts.most_common(10):
-                    error_table.add_row(error[:60] + ("..." if len(error) > 60 else ""), str(count))
-                
-                console.print(error_table)
-                console.print()
-            
-            # Summary with AISYAH branding
+            # Summary
             console.print()
             if report['success_rate'] >= 95:
-                console.print("[bold magenta]🌸 AISYAH:[/] [bold green]🎯 Excellent! Website is performing well.[/]")
+                console.print("[bold green]🎯 Excellent! Website is performing well.[/]")
             elif report['success_rate'] >= 80:
-                console.print("[bold magenta]🌸 AISYAH:[/] [bold yellow]⚠️ Performance could be improved.[/]")
+                console.print("[bold yellow]⚠️ Performance could be improved.[/]")
             else:
-                console.print("[bold magenta]🌸 AISYAH:[/] [bold red]❌ Website may be experiencing issues.[/]")
+                console.print("[bold red]❌ Website may be experiencing issues.[/]")
             
             console.print()
-            console.print("[dim]🌸 AISYAH - Thank you for using![/]")
+            console.print("[dim]🌸 AISYAH - Thank you![/]")
             
             return report
             
         except Exception as e:
-            console.print(f"[red]Report generation error: {e}[/]")
+            console.print(f"[red]Report error: {e}[/]")
             return {}
 
 # ============================================================================
@@ -711,11 +729,11 @@ def main():
         # Show AISYAH Banner
         console.print(AISYAH_BANNER, style="magenta")
         console.print()
-        console.print(Align.center("[dim]Website Load Tester with Live Dashboard - Portrait Mode[/]"))
+        console.print(Align.center("[dim]Load Tester with Live Dashboard - Separate Boxes[/]"))
         console.print()
         
-        # Get user input with AISYAH styling
-        url = console.input("[bold magenta]🌸 AISYAH[/] [bold cyan]🌐 Enter website URL[/] (e.g., https://example.com): ").strip()
+        # Get user input
+        url = console.input("[bold magenta]🌸 URL[/] [cyan]→[/] ").strip()
         
         if not url:
             console.print("[red]❌ URL cannot be empty![/]")
@@ -725,10 +743,10 @@ def main():
             url = 'https://' + url
         
         try:
-            num_requests_input = console.input("[bold magenta]🌸 AISYAH[/] [bold cyan]📊 Number of requests[/] (default 100): ").strip()
+            num_requests_input = console.input("[bold magenta]📊 Req[/] [cyan]→[/] ").strip()
             num_requests = int(num_requests_input) if num_requests_input else 100
             
-            num_threads_input = console.input("[bold magenta]🌸 AISYAH[/] [bold cyan]⚡ Concurrent threads[/] (default 10): ").strip()
+            num_threads_input = console.input("[bold magenta]⚡ Thr[/] [cyan]→[/] ").strip()
             num_threads = int(num_threads_input) if num_threads_input else 10
             
             # Validate
@@ -741,24 +759,24 @@ def main():
             num_threads = 10
         
         console.print()
-        console.print("[dim]🌸 AISYAH: Starting load test... Press Ctrl+C to stop early.[/dim]")
+        console.print("[dim]Press Ctrl+C to stop early.[/dim]")
         console.print()
         
         try:
-            # Run test with AISYAH
+            # Run test
             tester = AisyahLoadTester(url, num_requests, num_threads)
             results = tester.run_test()
             
         except KeyboardInterrupt:
-            console.print("\n[bold magenta]🌸 AISYAH:[/] [yellow]⚠️ Test interrupted by user.[/]")
+            console.print("\n[bold magenta]🌸 AISYAH:[/] [yellow]⚠️ Interrupted.[/]")
             if hasattr(tester, 'running'):
                 tester.running = False
                 tester.dashboard.running = False
-            console.print("[yellow]🌸 AISYAH: Generating partial report...[/yellow]")
+            console.print("[yellow]Generating partial report...[/yellow]")
             time.sleep(1)
             
     except KeyboardInterrupt:
-        console.print("\n[bold magenta]🌸 AISYAH:[/] [yellow]Test cancelled.[/]")
+        console.print("\n[bold magenta]🌸 AISYAH:[/] [yellow]Cancelled.[/]")
     except Exception as e:
         console.print(f"[bold magenta]🌸 AISYAH:[/] [red]Error: {e}[/]")
         import traceback
