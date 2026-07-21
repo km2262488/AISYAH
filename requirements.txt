@@ -1,0 +1,5 @@
+```txt
+requests>=2.28.0
+rich>=13.3.0
+plotext>=5.2.0
+```
