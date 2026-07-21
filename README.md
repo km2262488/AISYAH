@@ -17,34 +17,34 @@
 ┌─────────────────────────────────────────┐
 │  🌸 AISYAH LIVE DASHBOARD  14:30:25    │
 ├─────────────────────────────────────────┤
-│  📊 SUMMARY                             │
-│  Status: ● RUNNING                      │
-│  Duration: 45.2s                        │
-│  Requests: 1,234                        │
-│  ✅ Successful: 1,200                    │
-│  ❌ Failed: 34                          │
-│  Success Rate: 97.2%                    │
-│  RPS: 27.3                              │
+│  📊 SUMMARY                             
+│  Status: ● RUNNING                      
+│  Duration: 45.2s                        
+│  Requests: 1,234                        
+│  ✅ Successful: 1,200                    
+│  ❌ Failed: 34                          
+│  Success Rate: 97.2%                    
+│  RPS: 27.3                              
 ├─────────────────────────────────────────┤
-│  ⚡ PERFORMANCE                          │
-│  Avg Response: 125.3 ms                 │
-│  Median Response: 118.7 ms              │
-│  Min Response: 45.2 ms                  │
-│  Max Response: 312.8 ms                 │
-│  95th Percentile: 245.6 ms              │
-│  99th Percentile: 302.1 ms              │
+│  ⚡ PERFORMANCE                          
+│  Avg Response: 125.3 ms                 
+│  Median Response: 118.7 ms              
+│  Min Response: 45.2 ms                  
+│  Max Response: 312.8 ms                 
+│  95th Percentile: 245.6 ms              
+│  99th Percentile: 302.1 ms              
 ├─────────────────────────────────────────┤
-│  📋 Status Codes                        │
-│  HTTP 200: 1,200 (97.2%)                │
-│  HTTP 404: 15 (1.2%)                    │
-│  HTTP 500: 19 (1.5%)                    │
+│  📋 Status Codes                        
+│  HTTP 200: 1,200 (97.2%)                
+│  HTTP 404: 15 (1.2%)                    
+│  HTTP 500: 19 (1.5%)                    
 ├─────────────────────────────────────────┤
-│  📈 Response Time History               │
-│  [ASCII Chart - Full Width]             │
+│  📈 Response Time History               
+│  [ASCII Chart - Full Width]             
 ├─────────────────────────────────────────┤
-│  ⚠ ERRORS (5)                          │
-│  Connection Error: 3                    │
-│  Timeout: 2                             │
+│  ⚠ ERRORS (5)                          
+│  Connection Error: 3                    
+│  Timeout: 2                             
 └─────────────────────────────────────────┘
 ```
 
@@ -234,8 +234,8 @@ Distributed under the MIT License. See LICENSE for more information.
 
 AISYAH Team
 
-· GitHub: @yourusername
-· Email: your.email@example.com
+· GitHub: @km2262488
+· Email: N/A
 
 🙏 Acknowledgments
 
@@ -247,13 +247,6 @@ AISYAH Team
 
 AISYAH adalah tool untuk testing dan monitoring website secara legal. 
 Hanya gunakan untuk website yang Anda miliki atau memiliki izin untuk testing.
-
-❌ DILARANG menggunakan untuk:
-
-· DDoS attack
-· Unauthorized testing
-· Illegal activities
-
 Gunakan dengan bijak dan bertanggung jawab! 🌸
 
 🌟 Star History
@@ -265,17 +258,8 @@ https://api.star-history.com/svg?repos=yourusername/aisyah&type=Date
 <div align="center">
   <sub>Built with ❤️ by AISYAH Team</sub>
   <br>
-  <sub>🌸 Made with love for better web testing</sub>
+  <sub>🌸 Made with love for EVERYONE</sub>
 </div>
 ```
 
-📁 File Requirements
-
-requirements.txt
-
-```txt
-requests>=2.28.0
-rich>=13.3.0
-plotext>=5.2.0
-```
 
