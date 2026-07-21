@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """
 AISYAH - Website Load Tester with Live Dashboard
-Real-time monitoring with rich terminal UI - Separate Boxes
+Real-time monitoring with rich terminal UI 
 """
 
 import time
@@ -707,7 +707,7 @@ class AisyahLoadTester:
                 console.print("[bold red]❌ Website may be experiencing issues.[/]")
             
             console.print()
-            console.print("[dim]🌸 AISYAH - Thank you![/]")
+            console.print("[dim]🌸 AISYAH - ALHAMDULILLAH [/]")
             
             return report
             
