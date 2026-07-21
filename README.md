@@ -8,7 +8,7 @@
 </div>
 
 <p align="center">
-  <b>AISYAH</b> adalah tool load testing website dengan live dashboard real-time yang interaktif dan mudah digunakan.
+  <b>AISYAH</b> load testing website tool
 </p>
 
 📸 Preview Dashboard
